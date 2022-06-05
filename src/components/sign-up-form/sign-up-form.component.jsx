@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
+import { UserContext } from "../../contexts/user.context";
 import Button from "../button/button.component";
 import FormInput from "../form-input/form-input.component";
 import "./sign-up-form.styles.scss";
@@ -16,27 +17,32 @@ const defaultFormFields = {
 const SignUpForm = () => {
   const [formFields, setFormFields] = useState(defaultFormFields);
   const { displayName, email, password, confirmPassword } = formFields;
-  console.log(formFields);
+  const { setCurrentUser } = useContext(UserContext);
 
   const resetFormFields = () => {
     setFormFields(defaultFormFields);
   };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
+
     if (password !== confirmPassword) {
-      alert("passwords do not match try again.");
+      alert("passwords do not match");
       return;
     }
+
     try {
       const { user } = await createAuthUserWithEmailAndPassword(
         email,
         password
       );
+
       await createUserDocumentFromAuth(user, { displayName });
       resetFormFields();
+      setCurrentUser(user);
     } catch (error) {
       if (error.code === "auth/email-already-in-use") {
-        alert("cannot create user, email already in use");
+        alert("Cannot create user, email already in use");
       } else {
         console.log("user creation encountered an error", error);
       }
@@ -45,14 +51,15 @@ const SignUpForm = () => {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
+
     setFormFields({ ...formFields, [name]: value });
   };
 
   return (
     <div className="sign-up-container">
-      <h2>Don't have and account?</h2>
-      <span>Sign up with your email and password </span>
-      <form action="" onSubmit={handleSubmit}>
+      <h2>Don't have an account?</h2>
+      <span>Sign up with your email and password</span>
+      <form onSubmit={handleSubmit}>
         <FormInput
           label="Display Name"
           type="text"
@@ -88,11 +95,10 @@ const SignUpForm = () => {
           name="confirmPassword"
           value={confirmPassword}
         />
-        <Button buttonType="inverted" type="submit">
-          Sign Up
-        </Button>
+        <Button type="submit">Sign Up</Button>
       </form>
     </div>
   );
 };
+
 export default SignUpForm;
